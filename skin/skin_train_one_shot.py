@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import StepLR
 import numpy as np
-from . import task_generator_test as tg
+import task_generator_test as tg
 import os
 import math
 import argparse
@@ -100,7 +100,7 @@ class RelationNetwork(nn.Module):
         out = self.layer2(out)
         out = out.view(out.size(0), -1)
         out = F.relu(self.fc1(out))
-        out = F.sigmoid(self.fc2(out))
+        out = torch.sigmoid(self.fc2(out))
         return out
 
 
@@ -124,7 +124,8 @@ def main():
     # Step 1: init data folders
     print("init data folders")
     # init character folders for dataset construction
-    metatrain_folders, metatest_folders = tg.mini_imagenet_folders()
+    metatrain_folders = './../datas/skin-lesions-resized/train'
+    metatest_folders = './../datas/skin-lesions-resized/test'
 
     # Step 2: init neural networks
     print("init neural networks")
@@ -150,19 +151,19 @@ def main():
                                         gamma=0.5)
 
     if os.path.exists(
-            str("./models/miniimagenet_feature_encoder_" + str(CLASS_NUM) +
+            str("./models/skin_feature_encoder_" + str(CLASS_NUM) +
                 "way_" + str(SAMPLE_NUM_PER_CLASS) + "shot.pkl")):
         feature_encoder.load_state_dict(
             torch.load(
-                str("./models/miniimagenet_feature_encoder_" + str(CLASS_NUM) +
+                str("./models/skin_feature_encoder_" + str(CLASS_NUM) +
                     "way_" + str(SAMPLE_NUM_PER_CLASS) + "shot.pkl")))
         print("load feature encoder success")
     if os.path.exists(
-            str("./models/miniimagenet_relation_network_" + str(CLASS_NUM) +
+            str("./models/skin_relation_network_" + str(CLASS_NUM) +
                 "way_" + str(SAMPLE_NUM_PER_CLASS) + "shot.pkl")):
         relation_network.load_state_dict(
             torch.load(
-                str("./models/miniimagenet_relation_network_" +
+                str("./models/skin_relation_network_" +
                     str(CLASS_NUM) + "way_" + str(SAMPLE_NUM_PER_CLASS) +
                     "shot.pkl")))
         print("load relation network success")
@@ -173,14 +174,10 @@ def main():
     last_accuracy = 0.0
 
     for episode in range(EPISODE):
-
-        feature_encoder_scheduler.step(episode)
-        relation_network_scheduler.step(episode)
-
         # init dataset
         # sample_dataloader is to obtain previous samples for compare
         # batch_dataloader is to batch samples for training
-        task = tg.MiniImagenetTask(metatrain_folders, CLASS_NUM,
+        task = tg.SkinTask(metatrain_folders, CLASS_NUM,
                                    SAMPLE_NUM_PER_CLASS, BATCH_NUM_PER_CLASS)
         sample_dataloader = tg.get_mini_imagenet_data_loader(
             task,
@@ -235,9 +232,11 @@ def main():
 
         feature_encoder_optim.step()
         relation_network_optim.step()
+        feature_encoder_scheduler.step()
+        relation_network_scheduler.step()
 
         if (episode + 1) % 100 == 0:
-            print("episode:", episode + 1, "loss", loss.data[0])
+            print("episode:", episode + 1, "loss", loss.item())
 
         if episode % 5000 == 0:
 
@@ -247,7 +246,7 @@ def main():
             for i in range(TEST_EPISODE):
                 total_rewards = 0
                 counter = 0
-                task = tg.MiniImagenetTask(metatest_folders, CLASS_NUM, 1, 15)
+                task = tg.SkinTask(metatest_folders, CLASS_NUM, 1, 15)
                 sample_dataloader = tg.get_mini_imagenet_data_loader(
                     task, num_per_class=1, split="train", shuffle=False)
 
@@ -303,12 +302,12 @@ def main():
                 # save networks
                 torch.save(
                     feature_encoder.state_dict(),
-                    str("./models/miniimagenet_feature_encoder_" +
+                    str("./models/skin_feature_encoder_" +
                         str(CLASS_NUM) + "way_" + str(SAMPLE_NUM_PER_CLASS) +
                         "shot.pkl"))
                 torch.save(
                     relation_network.state_dict(),
-                    str("./models/miniimagenet_relation_network_" +
+                    str("./models/skin_relation_network_" +
                         str(CLASS_NUM) + "way_" + str(SAMPLE_NUM_PER_CLASS) +
                         "shot.pkl"))
 

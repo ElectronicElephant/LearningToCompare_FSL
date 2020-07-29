@@ -1,6 +1,4 @@
 # code is based on https://github.com/katerakelly/pytorch-maml
-import torchvision
-import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -28,31 +26,13 @@ class Rotate(object):
         return x
 
 
-def mini_imagenet_folders():
-    train_folder = '../datas/miniImagenet/train'
-    test_folder = '../datas/miniImagenet/test'
-
-    metatrain_folders = [os.path.join(train_folder, label) \
-                for label in os.listdir(train_folder) \
-                if os.path.isdir(os.path.join(train_folder, label)) \
-                ]
-    metatest_folders = [os.path.join(test_folder, label) \
-                for label in os.listdir(test_folder) \
-                if os.path.isdir(os.path.join(test_folder, label)) \
-                ]
-
-    random.seed(1)
-    random.shuffle(metatrain_folders)
-    random.shuffle(metatest_folders)
-
-    return metatrain_folders, metatest_folders
-
-
-class MiniImagenetTask(object):
+class SkinTask(object):
     def __init__(self, character_folders, num_classes, train_num, test_num):
-
-        self.character_folders = character_folders
+        # Only three catagories
+        self.character_folders = [str(os.path.join(character_folders, label))
+                                  for label in ('melanoma', 'nevus', 'seborrheic_keratosis')]
         self.num_classes = num_classes
+        assert num_classes <= 3
         self.train_num = train_num
         self.test_num = test_num
 
