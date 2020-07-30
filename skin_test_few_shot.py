@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import StepLR
 import numpy as np
-from . import task_generator_test as tg
+import task_generator as tg
 import os
 import math
 import argparse
@@ -100,7 +100,7 @@ class RelationNetwork(nn.Module):
         out = self.layer2(out)
         out = out.view(out.size(0), -1)
         out = F.relu(self.fc1(out))
-        out = F.sigmoid(self.fc2(out))
+        out = torch.sigmoid(self.fc2(out))
         return out
 
 
@@ -124,7 +124,7 @@ def main():
     # Step 1: init data folders
     print("init data folders")
     # init character folders for dataset construction
-    metatrain_folders, metatest_folders = tg.mini_imagenet_folders()
+    metatest_folders = './data/skin-lesions-84/test'
 
     # Step 2: init neural networks
     print("init neural networks")
@@ -135,31 +135,20 @@ def main():
     feature_encoder.cuda(GPU)
     relation_network.cuda(GPU)
 
-    feature_encoder_optim = torch.optim.Adam(feature_encoder.parameters(),
-                                             lr=LEARNING_RATE)
-    feature_encoder_scheduler = StepLR(feature_encoder_optim,
-                                       step_size=100000,
-                                       gamma=0.5)
-    relation_network_optim = torch.optim.Adam(relation_network.parameters(),
-                                              lr=LEARNING_RATE)
-    relation_network_scheduler = StepLR(relation_network_optim,
-                                        step_size=100000,
-                                        gamma=0.5)
-
     if os.path.exists(
-            str("./models/miniimagenet_feature_encoder_" + str(CLASS_NUM) +
+            str("./models/skin_feature_encoder_" + str(CLASS_NUM) +
                 "way_" + str(SAMPLE_NUM_PER_CLASS) + "shot.pkl")):
         feature_encoder.load_state_dict(
             torch.load(
-                str("./models/miniimagenet_feature_encoder_" + str(CLASS_NUM) +
+                str("./models/skin_feature_encoder_" + str(CLASS_NUM) +
                     "way_" + str(SAMPLE_NUM_PER_CLASS) + "shot.pkl")))
         print("load feature encoder success")
     if os.path.exists(
-            str("./models/miniimagenet_relation_network_" + str(CLASS_NUM) +
+            str("./models/skin_relation_network_" + str(CLASS_NUM) +
                 "way_" + str(SAMPLE_NUM_PER_CLASS) + "shot.pkl")):
         relation_network.load_state_dict(
             torch.load(
-                str("./models/miniimagenet_relation_network_" +
+                str("./models/skin_relation_network_" +
                     str(CLASS_NUM) + "way_" + str(SAMPLE_NUM_PER_CLASS) +
                     "shot.pkl")))
         print("load relation network success")
@@ -173,7 +162,7 @@ def main():
         accuracies = []
         for i in range(TEST_EPISODE):
             total_rewards = 0
-            task = tg.MiniImagenetTask(metatest_folders, CLASS_NUM,
+            task = tg.SkinTask(metatest_folders, CLASS_NUM,
                                        SAMPLE_NUM_PER_CLASS, 15)
             sample_dataloader = tg.get_mini_imagenet_data_loader(
                 task,

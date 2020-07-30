@@ -1,70 +1,70 @@
-# LearningToCompare_FSL
-PyTorch code for CVPR 2018 paper: [Learning to Compare: Relation Network for Few-Shot Learning](https://arxiv.org/abs/1711.06025) (Few-Shot Learning part)
+# LearningToCompare
+PyTorch code for CVPR 2018 paper: [Learning to Compare: Relation Network for Few-Shot Learning](https://arxiv.org/abs/1711.06025) (Few-Shot)
 
-For Zero-Shot Learning part, please visit [here](https://github.com/lzrobots/LearningToCompare_ZSL).
+Hyper-parameters and input-size(84 by 84) remain the same as the original MINIImageNet settings. You may further tune the hyper-params to get better performance.
 
 # Requirements
+Tested on
+- Python 3.7
+- PyTorch 1.5.1
 
-Python 2.7
-
-Pytorch 0.3
+Other versions **should** work, but not tested.
 
 # Data
-
-For Omniglot experiments, I directly attach omniglot 28x28 resized images in the git, which is created based on [omniglot](https://github.com/brendenlake/omniglot) and [maml](https://github.com/cbfinn/maml).
-
-For mini-Imagenet experiments, please download [mini-Imagenet](https://drive.google.com/open?id=0B3Irx3uQNoBMQ1FlNXJsZUdYWEE) and put it in ./datas/mini-Imagenet and run proc_image.py to preprocess generate train/val/test datasets. (This process method is based on [maml](https://github.com/cbfinn/maml)).
-
-# Train
-
-omniglot 5way 1 shot:
-
 ```
-python omniglot_train_one_shot.py -w 5 -s 1 -b 19 
-```
-
-omniglot 5way 5 shot:
-
-```
-python omniglot_train_few_shot.py -w 5 -s 5 -b 15 
+./data
+  └─skin-lesions-84
+    ├─test
+    │  ├─melanoma
+    │  ├─nevus
+    │  └─seborrheic_keratosis
+    ├─train
+    │  ├─melanoma
+    │  ├─nevus
+    │  └─seborrheic_keratosis
+    └─valid
+        ├─melanoma
+        ├─nevus
+        └─seborrheic_keratosis
 ```
 
-omniglot 20way 1 shot:
+# Train and Test
 
+2way 1 shot:
+
+- Train: `python skin_train_one_shot.py -w 2 -s 1 -b 19`
+- Test: `python skin_test_one_shot.py -w 2 -s 1`
+- Test Acc: 0.620(Avg), 0.629(Best)
+
+2way 3 shot:
+- Train: `python skin_train_few_shot.py -w 2 -s 3 -b 19`
+- Test: `python skin_test_one_shot.py -w 2 -s 3`
+- Test Acc: 0.651(Avg), 0.657(Best)
+
+2way 5 shot:
+- Train: `python skin_train_few_shot.py -w 2 -s 5 -b 19`
+- Test: `python skin_test_few_shot.py -w 2 -s 5`
+- Test Acc: 0.650(Avg), 0.661(Best)
+
+Test results may vary (+/- 0.003) on each run, depending on the random seed, CUDA environment, etc.
+
+You can change -b parameter based on your GPU memory. Currently It will load my trained model, if you want to train from scratch, you can delete models by yourself.
+
+Note that training will always **OVERRIDE** the pretrained models! Please backup the models on your need.
+
+# Parameters
 ```
-python omniglot_train_one_shot.py -w 20 -s 1 -b 10
+"-f", "--feature_dim", type=int, default=64
+"-r", "--relation_dim", type=int, default=8
+"-w", "--class_num", type=int, default=5
+"-s", "--sample_num_per_class", type=int, default=1
+"-b", "--batch_num_per_class", type=int, default=10
+"-e", "--episode", type=int, default=10
+"-t", "--test_episode", type=int, default=600
+"-l", "--learning_rate", type=float, default=0.001
+"-g", "--gpu", type=int, default=0
+"-u", "--hidden_unit", type=int, default=10
 ```
-
-omniglot 20way 5 shot:
-
-```
-python omniglot_train_few_shot.py -w 20 -s 5 -b 5
-```
-
-mini-Imagenet 5 way 1 shot:
-
-```
-python miniimagenet_train_one_shot.py -w 5 -s 1 -b 15
-```
-
-mini-Imagenet 5 way 5 shot:
-
-```
-python miniimagenet_train_few_shot.py -w 5 -s 5 -b 10
-```
-
-you can change -b parameter based on your GPU memory. Currently It will load my trained model, if you want to train from scratch, you can delete models by yourself.
-
-## Test
-
-omniglot 5way 1 shot:
-
-```
-python omniglot_test_one_shot.py -w 5 -s 1
-```
-
-Other experiments' testings are similar.
-
 
 ## Citing
 

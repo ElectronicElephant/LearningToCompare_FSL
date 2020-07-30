@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import StepLR
 import numpy as np
-import task_generator_test as tg
+import task_generator as tg
 import os
 import math
 import argparse
@@ -124,8 +124,8 @@ def main():
     # Step 1: init data folders
     print("init data folders")
     # init character folders for dataset construction
-    metatrain_folders = './../datas/skin-lesions-resized/train'
-    metatest_folders = './../datas/skin-lesions-resized/test'
+    metatrain_folders = './data/skin-lesions-84/train'
+    metatest_folders = './data/skin-lesions-84/test'
 
     # Step 2: init neural networks
     print("init neural networks")
