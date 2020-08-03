@@ -124,8 +124,8 @@ def main():
     # Step 1: init data folders
     print("init data folders")
     # init character folders for dataset construction
-    metatrain_folders = './data/skin-lesions-84/train'
-    metatest_folders = './data/skin-lesions-84/test'
+    metatrain_folders = './data/ISIC_2019_Training_GroundTruth.csv', './data/ISIC_2019_Training_Input-84/', 'train'
+    metatest_folders = './data/ISIC_2019_Training_GroundTruth.csv', './data/ISIC_2019_Training_Input-84/', 'test'
 
     # Step 2: init neural networks
     print("init neural networks")

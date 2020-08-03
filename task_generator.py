@@ -1,4 +1,6 @@
 # code is based on https://github.com/katerakelly/pytorch-maml
+from os import environ
+from os.path import split
 import torchvision.transforms as transforms
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -8,6 +10,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data.sampler import Sampler
+import csv
 
 
 def imshow(img):
@@ -27,38 +30,83 @@ class Rotate(object):
 
 
 class SkinTask(object):
-    def __init__(self, character_folders, num_classes, train_num, test_num):
-        # Only three catagories
-        self.character_folders = [str(os.path.join(character_folders, label))
-                                  for label in ('melanoma', 'nevus', 'seborrheic_keratosis')]
+    def __init__(self, paths, num_classes, train_num, test_num):
+        # cats = dict(MEL=0, NV=1, BCC=2, AK=3, BKL=4, DF=5, VASC=6,
+        #                  SCC=7, UNK=8)
+        # train_set = (1, 0, 2, 4, 3)
+        # test_set = (5, 6, 7)
+
         self.num_classes = num_classes
-        assert num_classes <= 3
+        assert num_classes <= 3  # NO MORE THAN 3
         self.train_num = train_num
         self.test_num = test_num
 
-        class_folders = random.sample(self.character_folders, self.num_classes)
-        labels = np.array(range(len(class_folders)))
-        labels = dict(zip(class_folders, labels))
-        samples = dict()
+        csv_path, img_root, split = paths
+        assert split in ['train', 'test']
 
-        self.train_roots = []
-        self.test_roots = []
-        for c in class_folders:
+        prior_classes = (1, 0, 2, 4, 3) if split == 'train' else (5, 6, 7)
+        classes = random.sample(prior_classes, self.num_classes)
+        labels = dict(zip(classes, np.array(range(len(classes)))))
+        samples = {i:[] for i in range(8)}
 
-            temp = [os.path.join(c, x) for x in os.listdir(c)]
-            samples[c] = random.sample(temp, len(temp))
-            random.shuffle(samples[c])
+        with open(csv_path, newline='') as csvfile:
+            annotations = list(csv.reader(csvfile))[1:]
+            random.shuffle(annotations)
+            for anno in annotations:
+                assert len(anno) == 10 and anno[-1] == '0.0'
+                label = np.array(anno[1:], dtype=np.float).astype(np.bool)
+                assert label.sum() == 1
+                cat_id = label.argmax()
+                if cat_id in classes:
+                    samples[cat_id].append(os.path.join(img_root, anno[0]+'.png'))
+                
+                lengths = (len(samples[cat]) for cat in classes)
+                if min(lengths) >= train_num + test_num:
+                    break
 
-            self.train_roots += samples[c][:train_num]
-            self.test_roots += samples[c][train_num:train_num + test_num]
+        self.train_roots, self.test_roots, self.train_labels, self.test_labels = [], [], [], []
+        for cat_id in classes:
+            new_cat_id = labels[cat_id]
+            self.train_roots += samples[cat_id][:train_num]
+            self.test_roots += samples[cat_id][train_num:train_num + test_num]
 
-        self.train_labels = [
-            labels[self.get_class(x)] for x in self.train_roots
-        ]
-        self.test_labels = [labels[self.get_class(x)] for x in self.test_roots]
+            self.train_labels += [new_cat_id] * train_num
+            self.test_labels += [new_cat_id] * test_num
 
-    def get_class(self, sample):
-        return os.path.join(*sample.split('/')[:-1])
+
+# class SkinTaskOld(object):
+#     def __init__(self, character_folders, num_classes, train_num, test_num):
+#         # Only three catagories
+#         self.character_folders = [str(os.path.join(character_folders, label))
+#                                   for label in ('melanoma', 'nevus', 'seborrheic_keratosis')]
+#         self.num_classes = num_classes
+#         assert num_classes <= 3
+#         self.train_num = train_num
+#         self.test_num = test_num
+
+#         class_folders = random.sample(self.character_folders, self.num_classes)
+#         labels = np.array(range(len(class_folders)))
+#         labels = dict(zip(class_folders, labels))
+#         samples = dict()
+
+#         self.train_roots = []
+#         self.test_roots = []
+#         for c in class_folders:
+
+#             temp = [os.path.join(c, x) for x in os.listdir(c)]
+#             samples[c] = random.sample(temp, len(temp))
+#             random.shuffle(samples[c])
+
+#             self.train_roots += samples[c][:train_num]
+#             self.test_roots += samples[c][train_num:train_num + test_num]
+
+#         self.train_labels = [
+#             labels[self.get_class(x)] for x in self.train_roots
+#         ]
+#         self.test_labels = [labels[self.get_class(x)] for x in self.test_roots]
+
+#     def get_class(self, sample):
+#         return os.path.join(*sample.split('/')[:-1])
 
 
 class FewShotDataset(Dataset):

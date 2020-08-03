@@ -30,20 +30,20 @@ Other versions **should** work, but not tested.
 
 # Train and Test
 
-2way 1 shot:
+3 way 1 shot:
 
-- Train: `python skin_train_one_shot.py -w 2 -s 1 -b 19`
-- Test: `python skin_test_one_shot.py -w 2 -s 1`
+- Train: `python skin_train_one_shot.py -w 3 -s 1 -b 19`
+- Test: `python skin_test_one_shot.py -w 3 -s 1`
 - Test Acc: 0.620(Avg), 0.629(Best)
 
-2way 3 shot:
-- Train: `python skin_train_few_shot.py -w 2 -s 3 -b 19`
-- Test: `python skin_test_one_shot.py -w 2 -s 3`
+3 way 3 shot:
+- Train: `python skin_train_few_shot.py -w 3 -s 3 -b 19`
+- Test: `python skin_test_one_shot.py -w 3 -s 3`
 - Test Acc: 0.651(Avg), 0.657(Best)
 
-2way 5 shot:
-- Train: `python skin_train_few_shot.py -w 2 -s 5 -b 19`
-- Test: `python skin_test_few_shot.py -w 2 -s 5`
+3 way 5 shot:
+- Train: `python skin_train_few_shot.py -w 3 -s 5 -b 19`
+- Test: `python skin_test_few_shot.py -w 3 -s 5`
 - Test Acc: 0.650(Avg), 0.661(Best)
 
 Test results may vary (+/- 0.003) on each run, depending on the random seed, CUDA environment, etc.
